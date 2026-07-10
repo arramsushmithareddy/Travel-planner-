@@ -1,6 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Smart Travel Planner</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f5f5;
+      text-align: center;
+    }
+    .box {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      background: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🌍 Smart Travel Planner</h1>
+
+<div class="box">
+  <input type="text" id="from" placeholder="From (e.g. Hyderabad)">
+  <input type="text" id="to" placeholder="To (e.g. Coorg)">
+  <input type="number" id="budget" placeholder="Budget (₹)">
+  <button onclick="planTrip()">Plan Trip</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+function planTrip() {
+  let from = document.getElementById("from").value;
+  let to = document.getElementById("to").value;
+  let budget = document.getElementById("budget").value;
+
+  let result = `
+    <h2>Trip Plan</h2>
+    <p><b>From:</b> ${from}</p>
+    <p><b>To:</b> ${to}</p>
+    <p><b>Budget:</b> ₹${budget}</p>
+
+    <h3>Suggestions:</h3>
+    <ul>
+      <li>🚆 Train: ₹800 - ₹1500</li>
+      <li>🚌 Bus: ₹600 - ₹1200</li>
+      <li>🍴 Food: ₹500/day</li>
+      <li>🏨 Stay: ₹800 - ₹1500/night</li>
+    </ul>
+
+    <a href="https://www.google.com/maps/dir/${from}/${to}" target="_blank">
+      📍 View Route on Google Maps
+    </a>
+  `;
+
+  document.getElementById("result").innerHTML = result;
+}
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
     <title>Travel Planner</title>
 </head>
 <body>
