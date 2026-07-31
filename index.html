@@ -1,31 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Smart Travel Planner</title>
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #f5f5f5;
       text-align: center;
+      margin: 0;
+      padding: 20px;
     }
     .box {
       background: white;
       padding: 20px;
       margin: 20px auto;
-      width: 300px;
+      max-width: 400px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-weight: 600;
     }
     input, button {
-      width: 90%;
+      width: 100%;
       padding: 10px;
-      margin: 10px 0;
+      margin: 6px 0 12px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
     }
     button {
       background: #007BFF;
       color: white;
       border: none;
       cursor: pointer;
+    }
+    button:disabled {
+      background: #9ec5ff;
+      cursor: not-allowed;
+    }
+    #result {
+      max-width: 700px;
+      margin: 20px auto;
+      text-align: left;
+    }
+    .suggestions ul {
+      margin: 6px 0 0 18px;
+    }
+    a.route-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #007BFF;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -34,59 +66,121 @@
 
 <h1>🌍 Smart Travel Planner</h1>
 
-<div class="box">
-  <input type="text" id="from" placeholder="From (e.g. Hyderabad)">
-  <input type="text" id="to" placeholder="To (e.g. Coorg)">
-  <input type="number" id="budget" placeholder="Budget (₹)">
-  <button onclick="planTrip()">Plan Trip</button>
+<div class="box" role="form" aria-labelledby="planner-heading">
+  <h2 id="planner-heading" style="margin-top:0">Plan your trip</h2>
+
+  <label for="from">From</label>
+  <input type="text" id="from" name="from" placeholder="e.g. Hyderabad" autocomplete="off">
+
+  <label for="to">To</label>
+  <input type="text" id="to" name="to" placeholder="e.g. Coorg" autocomplete="off">
+
+  <label for="budget">Budget (₹)</label>
+  <input type="number" id="budget" name="budget" placeholder="e.g. 5000" min="0">
+
+  <button id="planBtn">Plan Trip</button>
 </div>
 
-<div id="result"></div>
+<div id="result" aria-live="polite"></div>
 
 <script>
+// Helper: escape text to prevent HTML injection
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+}
+
+function formatCurrency(value) {
+  const n = Number(value);
+  if (!isFinite(n)) return '-';
+  return n.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+}
+
 function planTrip() {
-  let from = document.getElementById("from").value;
-  let to = document.getElementById("to").value;
-  let budget = document.getElementById("budget").value;
+  const fromEl = document.getElementById('from');
+  const toEl = document.getElementById('to');
+  const budgetEl = document.getElementById('budget');
 
-  let result = `
-    <h2>Trip Plan</h2>
-    <p><b>From:</b> ${from}</p>
-    <p><b>To:</b> ${to}</p>
-    <p><b>Budget:</b> ₹${budget}</p>
+  const from = fromEl.value.trim();
+  const to = toEl.value.trim();
+  const budgetRaw = budgetEl.value;
+  const budget = budgetRaw === '' ? null : Number(budgetRaw);
 
-    <h3>Suggestions:</h3>
-    <ul>
-      <li>🚆 Train: ₹800 - ₹1500</li>
-      <li>🚌 Bus: ₹600 - ₹1200</li>
-      <li>🍴 Food: ₹500/day</li>
-      <li>🏨 Stay: ₹800 - ₹1500/night</li>
-    </ul>
-
-    <a href="https://www.google.com/maps/dir/${from}/${to}" target="_blank">
-      📍 View Route on Google Maps
-    </a>
-  `;
-
-  document.getElementById("result").innerHTML = result;
-  <script>
-function generatePlan() {
-  const start = document.getElementById("start").value;
-  const dest = document.getElementById("destination").value;
-
-  if (!start || !dest) {
-    alert("Please enter all details!");
+  if (!from || !to) {
+    alert('Please enter both origin and destination.');
     return;
   }
 
-  document.getElementById("result").innerHTML =
-    `Trip from ${start} to ${dest} planned successfully! 🚀`;
+  // Build result DOM safely (avoid innerHTML with raw user input)
+  const result = document.getElementById('result');
+  result.innerHTML = ''; // clear
+
+  const h2 = document.createElement('h2');
+  h2.textContent = 'Trip Plan';
+  result.appendChild(h2);
+
+  const pFrom = document.createElement('p');
+  pFrom.innerHTML = '<strong>From:</strong> ' + escapeHtml(from);
+  result.appendChild(pFrom);
+
+  const pTo = document.createElement('p');
+  pTo.innerHTML = '<strong>To:</strong> ' + escapeHtml(to);
+  result.appendChild(pTo);
+
+  const pBudget = document.createElement('p');
+  pBudget.innerHTML = '<strong>Budget:</strong> ' + (budget === null ? 'Not specified' : formatCurrency(budget));
+  result.appendChild(pBudget);
+
+  const sug = document.createElement('div');
+  sug.className = 'suggestions';
+  const h3 = document.createElement('h3');
+  h3.textContent = 'Suggestions:';
+  sug.appendChild(h3);
+
+  const ul = document.createElement('ul');
+  const items = [
+    '🚆 Train: ₹800 - ₹1500',
+    '🚌 Bus: ₹600 - ₹1200',
+    '🍴 Food: ₹500/day',
+    '🏨 Stay: ₹800 - ₹1500/night'
+  ];
+  items.forEach(text => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    ul.appendChild(li);
+  });
+  sug.appendChild(ul);
+  result.appendChild(sug);
+
+  // Google Maps directions link (URL-encode user input)
+  const fromEnc = encodeURIComponent(from);
+  const toEnc = encodeURIComponent(to);
+  const a = document.createElement('a');
+  a.className = 'route-link';
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.href = `https://www.google.com/maps/dir/${fromEnc}/${toEnc}`;
+  a.textContent = '📍 View Route on Google Maps';
+  result.appendChild(a);
 }
+
+// Wire up button using addEventListener (avoid inline handlers)
+document.getElementById('planBtn').addEventListener('click', planTrip);
+
+// Optional: allow pressing Enter in inputs to trigger plan
+['from', 'to', 'budget'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      planTrip();
+    }
+  });
+});
 </script>
-  <input type="text" id="start" placeholder="Starting location">
-<input type="text" id="destination" placeholder="Destination">
-
-<button onclick="generatePlan()">Plan Trip</button>
-
-<p id="result"></p>
-
+</body>
+</html>
