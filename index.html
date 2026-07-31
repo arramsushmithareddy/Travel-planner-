@@ -69,4 +69,18 @@ function planTrip() {
   `;
 
   document.getElementById("result").innerHTML = result;
+  <script>
+function generatePlan() {
+  const start = document.getElementById("start").value;
+  const dest = document.getElementById("destination").value;
+
+  if (!start || !dest) {
+    alert("Please enter all details!");
+    return;
+  }
+
+  document.getElementById("result").innerHTML =
+    `Trip from ${start} to ${dest} planned successfully! 🚀`;
+}
+</script>
 
